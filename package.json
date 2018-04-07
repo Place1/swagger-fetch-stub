@@ -1,6 +1,6 @@
 {
   "name": "swagger-fetch-stub",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -14,14 +14,14 @@
     "json-refs": "^3.0.3",
     "path-to-regexp": "^2.1.0",
     "swagmock": "^1.0.0",
-    "ts-jest": "^22.4.2",
-    "tslib": "^1.9.0"
+    "tslib": "^1.9.0",
+    "url-pattern": "^1.0.3"
   },
   "devDependencies": {
+    "ts-jest": "^22.4.2",
     "@types/node": "^9.4.0",
     "ts-node": "^4.1.0",
-    "typescript": "^2.6.2",
-    "url-pattern": "^1.0.3"
+    "typescript": "^2.6.2"
   },
   "types": "dist/index.d.ts",
   "files": [
