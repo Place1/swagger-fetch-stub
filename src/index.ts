@@ -5,6 +5,7 @@ const yaml = require('js-yaml');
 const jsonrefs = require('json-refs');
 const swagmock = require('swagmock');
 const UrlPattern = require('url-pattern');
+const nodeFetch = require('node-fetch');
 
 async function readFileAsync(path: string) {
   return new Promise((resolve, reject) => fs.readFile(path, (err: Error, content: string) => err ? reject(err) : resolve(content)));
@@ -29,6 +30,6 @@ export async function swaggerApiMock(specPath: string) {
     const mockedMethod = mockedPath[init.method.toLowerCase()];
     const mockedResponseStatus = Object.keys(mockedMethod.responses)[0];
     const mockedResponse = mockedMethod.responses[mockedResponseStatus];
-    return Promise.resolve(new Response(JSON.stringify(mockedResponse), { status: parseInt(mockedResponseStatus) }));
+    return Promise.resolve(new nodeFetch.Response(JSON.stringify(mockedResponse), { status: parseInt(mockedResponseStatus) }));
   }
 }
