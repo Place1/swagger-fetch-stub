@@ -15,6 +15,7 @@ namespace SwaggerFetchStub {
     const mockResponses: Promise<any> = swagmock(spec, { validated: true }).responses();
 
     return async function fetch(url: string, init: any) {
+      url = url.split('?')[0].split('#')[0]; // strip the query and hash from the URL
       const pathIndex = urlPatterns.findIndex((pattern: any) => pattern.match(url) !== null);
       if (pathIndex === -1) {
         console.error(url, init, urlPatterns);
