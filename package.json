@@ -1,6 +1,6 @@
 {
   "name": "swagger-fetch-stub",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "js-yaml": "^3.10.0",
-    "json-refs": "^3.0.3",
+    "json-ref-lite": "^1.1.0",
     "node-fetch": "^2.1.2",
     "path-to-regexp": "^2.1.0",
     "swagmock": "^1.0.0",
