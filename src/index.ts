@@ -40,13 +40,14 @@ export class SwaggerFetchStub {
       // that appear before paths such as
       //   /api/item/:name/value/
       // don't stop the latter from being requested.
-      const matchingUrlsPaths = urlPatterns.map((pattern: any) => {
-        const match = pattern.match(url);
-        if (match) {
-          return Object.keys(match).length;
-        }
-        return Infinity;
-      });
+      const matchingUrlsPaths = urlPatterns
+        .map((pattern: any) => {
+          const match = pattern.match(url);
+          if (match) {
+            return Object.keys(match).length;
+          }
+        })
+        .filter((matchRank) => matchRank !== undefined) as number[];
       const pathIndex = indexOfMin(matchingUrlsPaths);
 
       if (pathIndex === -1) {

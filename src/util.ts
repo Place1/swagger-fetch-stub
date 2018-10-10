@@ -17,7 +17,7 @@ export function indexOfMin(list: number[]) {
   }
 
   var min = list[0];
-  var minIndex = -1;
+  var minIndex = 0;
 
   for (var i = 1; i < list.length; i++) {
     if (list[i] < min) {
