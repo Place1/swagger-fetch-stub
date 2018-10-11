@@ -1,8 +1,8 @@
-import { swaggerPathToUrlPattern, indexOfMin } from "./util";
+import { PathMatcher, bareUrlPath, bestMatch, stripBasePath } from "./util";
+import swagmock from 'swagmock';
 
 const yaml = require('js-yaml');
 const jsonrefs = require('json-ref-lite');
-const swagmock = require('swagmock');
 const nodeFetch = require('node-fetch');
 
 export interface Options {
@@ -21,43 +21,35 @@ export class SwaggerFetchStub {
     const swaggerYaml = yaml.safeLoad(swaggerSpec);
     const spec = jsonrefs.resolve(swaggerYaml);
 
-    const urlPatterns = Object.keys(spec.paths)
-      .map((path) => {
-        const basePath = options.basePath || spec.basePath || '';
-        return `/${basePath}/${path}`.replace(/\/+/g, '/');
-      })
-      .map(swaggerPathToUrlPattern);
-    const mockResponses: Promise<any> = swagmock(spec, { validated: true }).responses();
+    // Get all the paths from the spec. Remember that paths are the keys
+    const specPaths = Object.keys(spec.paths);
 
-    return async function fetch(url: string, init: any) {
-      url = url.split('?')[0].split('#')[0]; // strip the query and hash from the URL
+    // Create a list of matcher objects for our spec paths.
+    // We'll use these to determine which OpenAPI operation
+    // an HTTP request is for, determined by using the request path.
+    const pathMatchers = specPaths.map((path) => new PathMatcher(path));
 
-      // we want to find the index of the url pattern that matches the requested
-      // url. In the case of multiple matches, we want to pick the match with the
-      // least matching path params.
-      // This is done so that paths such as
-      //   /api/item/:name/:name/
-      // that appear before paths such as
-      //   /api/item/:name/value/
-      // don't stop the latter from being requested.
-      const matchingUrlsPaths = urlPatterns
-        .map((pattern: any) => {
-          const match = pattern.match(url);
-          if (match) {
-            return Object.keys(match).length;
-          }
-        })
-        .filter((matchRank) => matchRank !== undefined) as number[];
-      const pathIndex = indexOfMin(matchingUrlsPaths);
+    // Generate our mock responses collection for the given spec.
+    const mockResponses = swagmock(spec, { validated: true }).responses();
 
-      if (pathIndex === -1) {
+    // The api base path. We use the provided base path with preference over
+    // the base path defined in the spec so that clients can override it.
+    const basePath = options.basePath || spec.basePath || '';
+
+    return async function fetch(url: string, init: RequestInit) {
+      const path = stripBasePath(bareUrlPath(url), basePath);
+
+      const matcher = bestMatch(pathMatchers, path);
+      if (matcher === undefined) {
         throw new NotFoundError(url);
       }
-      const mockedPath = (await mockResponses)[Object.keys(spec.paths)[pathIndex]];
-      const mockedMethod = mockedPath[init.method.toLowerCase()];
-      const mockedResponseStatus = Object.keys(mockedMethod.responses)[0];
-      const mockedResponse = mockedMethod.responses[mockedResponseStatus];
-      return Promise.resolve(new nodeFetch.Response(JSON.stringify(mockedResponse), { status: parseInt(mockedResponseStatus) }));
+
+      const method = init.method || 'get';
+      const responses = await mockResponses;
+      const responsesByCode = responses[matcher.path][method.toLowerCase()].responses;
+      const code = Object.keys(responsesByCode)[0];
+      const data = responsesByCode[code];
+      return Promise.resolve<Response>(new nodeFetch.Response(JSON.stringify(data), { status: parseInt(code) }));
     }
   }
 }
